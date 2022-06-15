@@ -19,12 +19,15 @@ def start(message):
     )
 
 
-if __name__ == '__main__':
-    url = 'https://dvmn.org/api/user_reviews/'
+def get_user_reviews(url):
     headers = {
         'Authorization': f'Token {DVMN_KEY}',
     }
     response = requests.get(url, headers=headers)
     response.raise_for_status()
-    pprint(response.json())
-    # bot.polling(none_stop=True)
+    return response.json()
+
+
+if __name__ == '__main__':
+    url_review = 'https://dvmn.org/api/user_reviews/'
+    bot.polling(none_stop=True)
