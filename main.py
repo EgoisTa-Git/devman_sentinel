@@ -1,33 +1,66 @@
-import os
-from pprint import pprint
+from datetime import datetime
+from time import sleep
 
 import requests
-import telebot
-from dotenv import load_dotenv
+import telegram
+from environs import Env
 
-load_dotenv()
-TG_APIKEY = os.getenv('TG_BOT_APIKEY')
-DVMN_KEY = os.getenv('DVMN_API')
-bot = telebot.TeleBot(TG_APIKEY)
+env = Env()
+env.read_env()
+DVMN_API = env('DVMN_API')
+TG_BOT_APIKEY = env('TG_BOT_APIKEY')
+CHAT_ID = env('CHAT_ID')
+LONG_POLLING_URL = 'https://dvmn.org/api/long_polling/'
 
 
-@bot.message_handler(commands=['start'])
-def start(message):
+def reply_on_found(reply):
+    new_attempt = reply.get('new_attempts')[0]
+    correction_required = new_attempt.get('is_negative')
+    lesson_title = new_attempt.get('lesson_title')
+    lesson_url = new_attempt.get('lesson_url')
+    comment = '✔Вы познали мудрость богов, можно приступать к следующему уроку!'
+    if correction_required:
+        comment = '✘Седовласый мудрец молвит: "Всё хорошо, но переделать!"'
+    message = 'У Вас проверили работу:\n"{}"\n\n*{}*\n\n[Ссылка на работу]({})'\
+        .format(lesson_title, comment, lesson_url)
     bot.send_message(
-        message.chat.id,
-        'Привет!'
+        chat_id=CHAT_ID,
+        text=message,
+        parse_mode=telegram.ParseMode.MARKDOWN,
     )
 
 
-def get_user_reviews(url):
-    headers = {
-        'Authorization': f'Token {DVMN_KEY}',
-    }
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.json()
-
-
 if __name__ == '__main__':
-    url_review = 'https://dvmn.org/api/user_reviews/'
-    bot.polling(none_stop=True)
+    headers = {'Authorization': f'Token {DVMN_API}'}
+    params = {'timestamp': datetime.timestamp(datetime.now())}
+    bot = telegram.Bot(token=TG_BOT_APIKEY)
+    connection = True
+    while True:
+        try:
+            response = requests.get(
+                url=LONG_POLLING_URL,
+                headers=headers,
+                params=params,
+            )
+        except requests.exceptions.ReadTimeout:
+            if connection:
+                bot.send_message(
+                    chat_id=CHAT_ID,
+                    text='Сервер не отвечает. Повторный запрос...',
+                )
+                connection = False
+            continue
+        except requests.ConnectionError:
+            if connection:
+                print('Соединение потеряно. Переподключение...')
+                connection = False
+            sleep(3)
+            continue
+        connection = True
+        status = response.json().get('status')
+        if status == 'found':
+            params['timestamp'] = response.json().get('last_attempt_timestamp')
+            reply_on_found(response.json())
+        elif status == 'timeout':
+            params['timestamp'] = response.json().get('timestamp_to_request')
+        response.raise_for_status()
