@@ -32,8 +32,8 @@ python main.py
 Доступные переменные:
 
 - `TG_BOT_APIKEY` — Ваш API-ключ для работы с Telegram-ботом
-- `DVMN_API` — Ваш персональный токен Devman ([Тут](https://dvmn.org/api/docs/))
-- `CHAT_ID` — Ваш ID в Телеграм (можно узнать, написав [ему](https://t.me/userinfobot))
+- `DVMN_API_KEY` — Ваш персональный токен Devman ([Тут](https://dvmn.org/api/docs/))
+- `TG_CHAT_ID` — Ваш ID в Телеграм (можно узнать, написав [ему](https://t.me/userinfobot))
 
 ## Цели проекта
 
