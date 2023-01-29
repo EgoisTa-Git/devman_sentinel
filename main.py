@@ -42,6 +42,7 @@ if __name__ == '__main__':
                 headers=headers,
                 params=params,
             )
+            response.raise_for_status()
         except requests.exceptions.ReadTimeout:
             if connection:
                 bot.send_message(
@@ -63,4 +64,3 @@ if __name__ == '__main__':
             reply_on_found(response.json())
         elif status == 'timeout':
             params['timestamp'] = response.json().get('timestamp_to_request')
-        response.raise_for_status()
