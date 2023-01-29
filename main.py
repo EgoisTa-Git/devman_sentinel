@@ -33,7 +33,7 @@ if __name__ == '__main__':
     headers = {'Authorization': f'Token {dvmn_api_key}'}
     params = {'timestamp': datetime.timestamp(datetime.now())}
     bot = telegram.Bot(token=tg_bot_api_key)
-    connection = True
+    timeout = False
     while True:
         try:
             response = requests.get(
@@ -43,20 +43,17 @@ if __name__ == '__main__':
             )
             response.raise_for_status()
         except requests.exceptions.ReadTimeout:
-            if connection:
+            if not timeout:
                 bot.send_message(
                     chat_id=tg_chat_id,
                     text='Сервер не отвечает. Повторный запрос...',
                 )
-                connection = False
+                timeout = True
             continue
         except requests.ConnectionError:
-            if connection:
-                print('Соединение потеряно. Переподключение...')
-                connection = False
             sleep(3)
             continue
-        connection = True
+        timeout = False
         founded_review = response.json()
         status = founded_review.get('status')
         if status == 'found':
