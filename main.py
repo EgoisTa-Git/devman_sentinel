@@ -6,7 +6,7 @@ import telegram
 from environs import Env
 
 
-def reply_on_found(reply):
+def reply_on_found(reply, chat_id):
     new_attempt = reply.get('new_attempts')[0]
     correction_required = new_attempt.get('is_negative')
     lesson_title = new_attempt.get('lesson_title')
@@ -17,7 +17,7 @@ def reply_on_found(reply):
     message = 'У Вас проверили работу:\n"{}"\n\n*{}*\n\n[Ссылка на работу]({})'\
         .format(lesson_title, comment, lesson_url)
     bot.send_message(
-        chat_id=tg_chat_id,
+        chat_id=chat_id,
         text=message,
         parse_mode=telegram.ParseMode.MARKDOWN,
     )
@@ -60,6 +60,6 @@ if __name__ == '__main__':
         status = response.json().get('status')
         if status == 'found':
             params['timestamp'] = response.json().get('last_attempt_timestamp')
-            reply_on_found(response.json())
+            reply_on_found(response.json(), tg_chat_id)
         elif status == 'timeout':
             params['timestamp'] = response.json().get('timestamp_to_request')
