@@ -6,8 +6,8 @@ import telegram
 from environs import Env
 
 
-def send_review_status(reply, chat_id):
-    new_attempt = reply.get('new_attempts')[0]
+def send_review_status(review, chat_id):
+    new_attempt = review.get('new_attempts')[0]
     correction_required = new_attempt.get('is_negative')
     lesson_title = new_attempt.get('lesson_title')
     lesson_url = new_attempt.get('lesson_url')
@@ -57,9 +57,10 @@ if __name__ == '__main__':
             sleep(3)
             continue
         connection = True
-        status = response.json().get('status')
+        founded_review = response.json()
+        status = founded_review.get('status')
         if status == 'found':
-            params['timestamp'] = response.json().get('last_attempt_timestamp')
-            send_review_status(response.json(), tg_chat_id)
+            params['timestamp'] = founded_review.get('last_attempt_timestamp')
+            send_review_status(founded_review, tg_chat_id)
         elif status == 'timeout':
-            params['timestamp'] = response.json().get('timestamp_to_request')
+            params['timestamp'] = founded_review.get('timestamp_to_request')
