@@ -7,9 +7,9 @@ from environs import Env
 
 env = Env()
 env.read_env()
-DVMN_API = env('DVMN_API')
+DVMN_API_KEY = env('DVMN_API_KEY')
 TG_BOT_APIKEY = env('TG_BOT_APIKEY')
-CHAT_ID = env('CHAT_ID')
+TG_CHAT_ID = env('TG_CHAT_ID')
 LONG_POLLING_URL = 'https://dvmn.org/api/long_polling/'
 
 
@@ -24,14 +24,14 @@ def reply_on_found(reply):
     message = 'У Вас проверили работу:\n"{}"\n\n*{}*\n\n[Ссылка на работу]({})'\
         .format(lesson_title, comment, lesson_url)
     bot.send_message(
-        chat_id=CHAT_ID,
+        chat_id=TG_CHAT_ID,
         text=message,
         parse_mode=telegram.ParseMode.MARKDOWN,
     )
 
 
 if __name__ == '__main__':
-    headers = {'Authorization': f'Token {DVMN_API}'}
+    headers = {'Authorization': f'Token {DVMN_API_KEY}'}
     params = {'timestamp': datetime.timestamp(datetime.now())}
     bot = telegram.Bot(token=TG_BOT_APIKEY)
     connection = True
@@ -45,7 +45,7 @@ if __name__ == '__main__':
         except requests.exceptions.ReadTimeout:
             if connection:
                 bot.send_message(
-                    chat_id=CHAT_ID,
+                    chat_id=TG_CHAT_ID,
                     text='Сервер не отвечает. Повторный запрос...',
                 )
                 connection = False
