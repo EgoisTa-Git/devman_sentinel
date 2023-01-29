@@ -6,7 +6,7 @@ import telegram
 from environs import Env
 
 
-def send_review_status(review, chat_id):
+def send_review_status(bot, review, chat_id):
     new_attempt = review.get('new_attempts')[0]
     correction_required = new_attempt.get('is_negative')
     lesson_title = new_attempt.get('lesson_title')
@@ -50,6 +50,6 @@ if __name__ == '__main__':
         status = founded_review.get('status')
         if status == 'found':
             params['timestamp'] = founded_review.get('last_attempt_timestamp')
-            send_review_status(founded_review, tg_chat_id)
+            send_review_status(bot, founded_review, tg_chat_id)
         elif status == 'timeout':
             params['timestamp'] = founded_review.get('timestamp_to_request')
