@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from time import sleep
 
@@ -24,6 +25,7 @@ def send_review_status(bot, review, chat_id):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     env = Env()
     env.read_env()
     dvmn_api_key = env('DVMN_API_KEY')
