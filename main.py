@@ -56,25 +56,28 @@ if __name__ == '__main__':
     logger.addHandler(TelegramLogsHandler(bot, tg_chat_id))
     while True:
         try:
-            response = requests.get(
-                url=long_polling_url,
-                headers=headers,
-                params=params,
-            )
-            response.raise_for_status()
-        except requests.exceptions.ReadTimeout:
-            logger.warning('Истекло время ожидания ответа от сервера')
-            continue
-        except requests.exceptions.HTTPError:
-            logger.warning('Сервер не отвечает')
-            continue
-        except requests.ConnectionError:
-            sleep(3)
-            continue
-        founded_review = response.json()
-        status = founded_review.get('status')
-        if status == 'found':
-            params['timestamp'] = founded_review.get('last_attempt_timestamp')
-            send_review_status(bot, founded_review, tg_chat_id)
-        elif status == 'timeout':
-            params['timestamp'] = founded_review.get('timestamp_to_request')
+            try:
+                response = requests.get(
+                    url=long_polling_url,
+                    headers=headers,
+                    params=params,
+                )
+                response.raise_for_status()
+            except requests.exceptions.ReadTimeout:
+                logging.warning('Истекло время ожидания ответа от сервера')
+                continue
+            except requests.exceptions.HTTPError:
+                logging.warning('Сервер не отвечает')
+                continue
+            except requests.ConnectionError:
+                sleep(3)
+                continue
+            founded_review = response.json()
+            status = founded_review.get('status')
+            if status == 'found':
+                params['timestamp'] = founded_review.get('last_attempt_timestamp')
+                send_review_status(bot, founded_review, tg_chat_id)
+            elif status == 'timeout':
+                params['timestamp'] = founded_review.get('timestamp_to_request')
+        except Exception as error:
+            logger.exception(error)
