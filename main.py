@@ -6,8 +6,22 @@ import requests
 import telegram
 from environs import Env
 
+logger = logging.getLogger(__file__)
 
-def send_review_status(bot, review, chat_id):
+
+class TelegramLogsHandler(logging.Handler):
+
+    def __init__(self, tg_bot, chat_id):
+        super().__init__()
+        self.chat_id = chat_id
+        self.tg_bot = tg_bot
+
+    def emit(self, record):
+        log_entry = self.format(record)
+        self.tg_bot.send_message(chat_id=self.chat_id, text=log_entry)
+
+
+def send_review_status(tg_bot, review, chat_id):
     new_attempt = review.get('new_attempts')[0]
     correction_required = new_attempt.get('is_negative')
     lesson_title = new_attempt.get('lesson_title')
@@ -17,7 +31,7 @@ def send_review_status(bot, review, chat_id):
         comment = '✘Седовласый мудрец молвит: "Всё хорошо, но переделать!"'
     message = 'У Вас проверили работу:\n"{}"\n\n*{}*\n\n[Ссылка на работу]({})'\
         .format(lesson_title, comment, lesson_url)
-    bot.send_message(
+    tg_bot.send_message(
         chat_id=chat_id,
         text=message,
         parse_mode=telegram.ParseMode.MARKDOWN,
@@ -25,7 +39,6 @@ def send_review_status(bot, review, chat_id):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
     env = Env()
     env.read_env()
     dvmn_api_key = env('DVMN_API_KEY')
@@ -35,6 +48,12 @@ if __name__ == '__main__':
     headers = {'Authorization': f'Token {dvmn_api_key}'}
     params = {'timestamp': datetime.timestamp(datetime.now())}
     bot = telegram.Bot(token=tg_bot_api_key)
+    logging.basicConfig(
+        level=logging.WARNING,
+        format='%(process)d %(filename)s %(levelname)s %(message)s',
+    )
+    logger.setLevel(logging.ERROR)
+    logger.addHandler(TelegramLogsHandler(bot, tg_chat_id))
     while True:
         try:
             response = requests.get(
@@ -44,6 +63,10 @@ if __name__ == '__main__':
             )
             response.raise_for_status()
         except requests.exceptions.ReadTimeout:
+            logger.warning('Истекло время ожидания ответа от сервера')
+            continue
+        except requests.exceptions.HTTPError:
+            logger.warning('Сервер не отвечает')
             continue
         except requests.ConnectionError:
             sleep(3)
