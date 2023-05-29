@@ -19,7 +19,7 @@ docker build -t devman-sentinel-bot ./
 ```
 - Или скачайте готовый образ и сразу запустите контейнер
 ```bash
-docker run -d --env-file ./.env --restart=unless-stopped --name=devman-sentinel egoista1dev/devman-sentinel-bot
+docker run -d --env-file ./.env --restart=always --name=devman-sentinel egoista1dev/devman-sentinel-bot
 ```
 
 ## Переменные окружения
